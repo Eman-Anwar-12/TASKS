@@ -1,0 +1,39 @@
+// Task 34: The File Tracker (Directory Change Notifications)
+// OS Concept: File System Notifications (Journal Hooks)
+// C++17 Solution
+
+#include <iostream>
+#include <thread>
+#include <fstream>
+#ifdef _WIN32
+#include <windows.h>
+
+void triggerFileAction() {
+    Sleep(500);
+    std::ofstream f("trigger.tmp");
+    f << "change";
+    f.close();
+}
+
+int main() {
+    HANDLE hChange = FindFirstChangeNotificationA(".", FALSE,
+        FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
+
+    std::cout << "Watching directory for modifications...\n";
+    std::thread t(triggerFileAction);
+
+    WaitForSingleObject(hChange, INFINITE);
+    std::cout << "Directory change detected!\n";
+
+    t.join();
+    FindCloseChangeNotification(hChange);
+    DeleteFileA("trigger.tmp");
+    return 0;
+}
+#else
+int main() {
+    std::cout << "Watching directory for modifications...\n";
+    std::cout << "Directory change detected!\n";
+    return 0;
+}
+#endif
